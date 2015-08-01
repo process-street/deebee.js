@@ -1,0 +1,27 @@
+{
+  "name": "deebee.js",
+  "main": "deebee.js",
+  "version": "0.1.0",
+  "authors": [
+    "Cameron McKay <cameron@process.st>"
+  ],
+  "description": "A JavaScript in-memory database",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "database",
+    "memory"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/process-street/deebee.js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
