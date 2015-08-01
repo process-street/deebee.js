@@ -33,19 +33,25 @@
     };
 
     function Collection(database, name, relationships) {
-        this._database = database;
-        this._name = name;
-        this._relationships = relationships || {};
+
         this._modelMap = new Map();
+
+        Object.defineProperties(this, {
+            database: {
+                enumerable: true,
+                value: database
+            },
+            name: {
+                enumerable: true,
+                value: name
+            },
+            relationships: {
+                enumerable: true,
+                value: relationships || {}
+            }
+        });
+
     }
-
-    Collection.prototype.getDatabase = function () {
-        return this._database;
-    };
-
-    Collection.prototype.getName = function () {
-        return this._name;
-    };
 
     Collection.prototype.put = function (object) {
 
@@ -55,13 +61,17 @@
 
         models.forEach(function (model) {
 
+            if (model.id === undefined || model.id === null) {
+                throw new Error('model requires an id: ' + JSON.stringify(model));
+            }
+
             // We don't want our changes here to affect the originals, so we need to clone them
             var clonedModel = clone(model);
 
             // Collection relations first
-            Object.keys(self._relationships).forEach(function (key) {
+            Object.keys(self.relationships).forEach(function (key) {
 
-                var collectionName = self._relationships[key];
+                var collectionName = self.relationships[key];
 
                 var relation = clonedModel[key];
                 if (!relation) {
@@ -70,7 +80,7 @@
 
                 // Don't store references
                 if (!isReference(relation)) {
-                    self._database.getCollection(collectionName).put(relation);
+                    self.database.getCollection(collectionName).put(relation);
                 }
 
                 // As you store them, strip them down to id references
@@ -78,7 +88,7 @@
 
             });
 
-            //console.log('put a model into %s: %s', self._name, JSON.stringify(model));
+            //console.log('put a model into %s: %s', self.name, JSON.stringify(model));
             self._modelMap.set(clonedModel.id, clonedModel);
 
         });
@@ -167,8 +177,8 @@
             var keys = include.split('.');
             var key = keys[0];
 
-            var collectionName = self._relationships[key];
-            var collection = self._database.getCollection(collectionName);
+            var collectionName = self.relationships[key];
+            var collection = self.database.getCollection(collectionName);
             var relation = collection.get(clonedModel[key].id);
 
             if (!relation) {

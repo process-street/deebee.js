@@ -7,6 +7,22 @@ describe('Collection', function () {
         database = new Deebee.Database();
     });
 
+    it('should not put a model in the collection if the id is undefined', function () {
+        var collection = database.createCollection('benders');
+        var avatar = { name: 'Korra', nation: 'Water Tribe' };
+        expect(function () {
+            collection.put(avatar);
+        }).toThrowError(Error);
+    });
+
+    it('should not put a model in the collection if the id is null', function () {
+        var collection = database.createCollection('benders');
+        var avatar = { id: null, name: 'Korra', nation: 'Water Tribe' };
+        expect(function () {
+            collection.put(avatar);
+        }).toThrowError(Error);
+    });
+
     it('should put a model in the collection', function () {
         var collection = database.createCollection('benders');
         var avatar = { id: 42, name: 'Korra', nation: 'Water Tribe' };
@@ -42,7 +58,7 @@ describe('Collection', function () {
     it('should put model relations in their collections', function () {
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
-            nation: nationCollection.getName()
+            nation: nationCollection.name
         });
         var avatar = {
             id: 42,
@@ -69,7 +85,7 @@ describe('Collection', function () {
     it('should get a model with includes', function () {
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
-            nation: nationCollection.getName()
+            nation: nationCollection.name
         });
         var avatar = {
             id: 42,
@@ -86,10 +102,10 @@ describe('Collection', function () {
     it('should get a model with 2 levels of includes', function () {
         var elementCollection = database.createCollection('elements');
         var nationCollection = database.createCollection('nations', {
-            element: elementCollection.getName()
+            element: elementCollection.name
         });
         var benderCollection = database.createCollection('benders', {
-            nation: nationCollection.getName()
+            nation: nationCollection.name
         });
         var avatar = {
             id: 42,
@@ -111,8 +127,8 @@ describe('Collection', function () {
         var elementCollection = database.createCollection('elements');
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
-            nation: nationCollection.getName(),
-            mostUsedElement: elementCollection.getName()
+            nation: nationCollection.name,
+            mostUsedElement: elementCollection.name
         });
         var avatar = {
             id: 42,
@@ -134,7 +150,7 @@ describe('Collection', function () {
 
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
-            nation: nationCollection.getName()
+            nation: nationCollection.name
         });
 
         var avatar1 = {
