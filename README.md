@@ -1,6 +1,6 @@
 # deebee.js
 
-An JavaScript in-memory database.  
+A JavaScript in-memory database.  
 
 ## Installation
 
@@ -24,13 +24,13 @@ var avatar = {
     id: 42,
     name: 'Korra',
     element: { id: 1, name: 'Water' }
-}l
+};
 avatars.put(avatar);
 
 var water = elements.get(1);
 // = { id: 1, name: 'Water' }
 
-var avatar = avatars.get(42);
+var partialAvatar = avatars.get(42);
 // = { id: 42, name: 'Korra', element: { id: 1 } }
 
 var fullAvatar = avatars.get(42, ['element']);
