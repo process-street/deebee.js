@@ -12,6 +12,12 @@ In a browser:
 
 ## Notes
 
+Deebee uses the [ES6 Map object](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map) to
+store data. 
+
+The ES6 Map object is available in Chrome 38, Firefox 13, Internet Explorer 11 and Safari 7.1. 
+If you need support in earlier versions, you can use a polyfill like [es6-collections](https://github.com/WebReflection/es6-collections).
+
 This method will provides a global Deebee object. That means that once you include it, you can use it like this:
 
 ```javascript
