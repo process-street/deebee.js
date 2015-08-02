@@ -66,7 +66,7 @@
             }
 
             // We don't want our changes here to affect the originals, so we need to clone them
-            var clonedModel = clone(model);
+            var clonedModel = objectClone(model);
 
             // Collection relations first
             Object.keys(self.relationships).forEach(function (key) {
@@ -114,7 +114,12 @@
 
         var self = this;
 
-        f = f || function () { return true; };
+        if (f) {
+            f = isFunction(f) ? f : generatePredicate(f);
+        } else {
+            f = function () { return true; };
+        }
+
         includes = includes || [];
 
         var results = [];
@@ -170,7 +175,7 @@
 
         var self = this;
 
-        var clonedModel = clone(model);
+        var clonedModel = objectClone(model);
 
         includes.forEach(function (include) {
 
@@ -193,15 +198,40 @@
 
     };
 
-    // Static
+    // Helpers
 
-    function clone(model) {
-        return JSON.parse(JSON.stringify(model));
+    function generatePredicate(object) {
+        var keys = Object.keys(object);
+        return function (model) {
+            var result = true;
+            var len = keys.length;
+            for (var i = 0; i < len; i++) {
+                result = result && elvis(model, keys[i]) === object[keys[i]];
+                if (!result) break;
+            }
+            return result;
+        };
+    }
+
+    function elvis(object, path) {
+        return path.split('.').reduce(function (subObject, key) {
+            return subObject && subObject[key];
+        }, object);
+    }
+
+    function isFunction(object) {
+        return !!(object && object.constructor && object.call && object.apply);
     }
 
     function isReference(model) {
         var keys = Object.keys(model);
-        return keys.length === 1 && model.id;
+        return keys.length === 1 && model.id !== undefined && model.id !== null;
+    }
+
+    function objectClone(model) {
+        // The default object clone method, suitable for JSON data
+        // Does not handle complex objects like Date and RegExp
+        return JSON.parse(JSON.stringify(model));
     }
 
     var Deebee = {

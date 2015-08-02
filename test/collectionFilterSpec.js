@@ -60,9 +60,50 @@ describe('Collection#filter', function () {
 
     });
 
-    it('should return all models if no filter function is provided', function () {
+    it('should filter all models if no filter predicate is provided', function () {
         var models = posts.filter();
         expect(models).toEqual(posts.getAll());
+    });
+
+    it('should filter no models if a false predicate function is provided', function () {
+        var models = posts.filter(function () {
+            return false;
+        });
+        expect(models).toEqual([]);
+    });
+
+    it('should filter all models with blog id 1 using a predicate function', function () {
+        var models = posts.filter(function (post) {
+            return post.blog.id === 1;
+        });
+        expect(models).toEqual([post1, post2]);
+    });
+
+    it('should filter all models with owner id 1 using includes', function () {
+
+        var models = posts.filter(function (post) {
+            return post.blog.owner.id === 1;
+        }, ['blog']);
+
+        var clonedBlog = JSON.parse(JSON.stringify(blog1));
+        clonedBlog.owner = { id: 1 };
+        var clonedPost1 = JSON.parse(JSON.stringify(post1));
+        clonedPost1.blog = clonedBlog;
+        var clonedPost2 = JSON.parse(JSON.stringify(post2));
+        clonedPost2.blog = clonedBlog;
+
+        expect(models).toEqual([clonedPost1, clonedPost2]);
+
+    });
+
+    it('should filter all models if an empty predicate object is provided', function () {
+        var models = posts.filter({});
+        expect(models).toEqual(posts.getAll());
+    });
+
+    it('should filter all models with blog id 1 using a predicate object', function () {
+        var models = posts.filter({ 'blog.id': 1 });
+        expect(models).toEqual([post1, post2]);
     });
 
 });
