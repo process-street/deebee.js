@@ -35,6 +35,7 @@
     function Collection(database, name, relationships) {
 
         this._modelMap = new Map();
+        this._eventListenerMap = new Map();
 
         Object.defineProperties(this, {
             database: {
@@ -89,6 +90,7 @@
             });
 
             //console.log('put a model into %s: %s', self.name, JSON.stringify(model));
+            self.trigger('put', clonedModel);
             self._modelMap.set(clonedModel.id, clonedModel);
 
         });
@@ -151,7 +153,10 @@
     };
 
     Collection.prototype.delete = function (id) {
-        return this._modelMap.delete(id);
+        var model = this.get(id);
+        this._modelMap.delete(id);
+        this.trigger('delete', model);
+        return model;
     };
 
     Collection.prototype.deleteWhere = function (f, includes) {
@@ -167,6 +172,40 @@
 
     Collection.prototype.clear = function () {
         this._modelMap.clear();
+    };
+
+    // Events
+
+    Collection.prototype.on = function (name, f) {
+
+        if (!this._eventListenerMap.has(name)) {
+            this._eventListenerMap.set(name, []);
+        }
+
+        this._eventListenerMap.get(name).push(f);
+        return this.off.bind(this, name, f);
+
+    };
+
+    Collection.prototype.off = function (name, f) {
+
+        if (this._eventListenerMap.has(name)) {
+            var map = this._eventListenerMap.get(name);
+            var index = map.indexOf(f);
+            if (index >= 0) {
+                map.splice(index, 1);
+            }
+        }
+
+    };
+
+    Collection.prototype.trigger = function (name, model) {
+        var self = this;
+        if (self._eventListenerMap.has(name)) {
+            self._eventListenerMap.get(name).forEach(function (f) {
+                f.call(self, name, model);
+            });
+        }
     };
 
     // Private

@@ -1,4 +1,4 @@
-describe('Collection#filter', function () {
+describe('Collection Filters', function () {
     "use strict";
 
     var database;
