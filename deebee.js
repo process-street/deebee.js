@@ -203,7 +203,7 @@
         var self = this;
         if (self._eventListenerMap.has(name)) {
             self._eventListenerMap.get(name).forEach(function (f) {
-                f.call(self, name, model);
+                f.call(self, model);
             });
         }
     };

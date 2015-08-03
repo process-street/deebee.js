@@ -69,4 +69,16 @@ describe('Collection Events', function () {
         expect(triggered).toBe(true);
     });
 
+    it('should use events to delete all posts when a blog is deleted', function () {
+
+        blogs.on('delete', function (blog) {
+            posts.deleteWhere({ 'blog.id': blog.id });
+        });
+
+        blogs.delete(blog1.id);
+
+        expect(posts.getAll()).toEqual([post3]);
+
+    });
+
 });
