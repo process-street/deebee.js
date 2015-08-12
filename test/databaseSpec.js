@@ -40,4 +40,18 @@ describe('Database', function () {
         expect(database.getAllCollections().length).toBe(0);
     });
 
+    it('should customize the model clone method to not clone fields that start with $', function () {
+        var database = new Deebee.Database({
+            modelClone: function (model) {
+                return JSON.parse(JSON.stringify(model, function (key, value) {
+                    return key.charAt(0) !== '$' ? value : undefined;
+                }));
+            }
+        });
+        var gadgets = database.createCollection('gadgets');
+        gadgets.put({ id: 1, public: 'abc', $private: 'xyz' });
+        var gadget = gadgets.get(1);
+        expect(gadget).toEqual({ id: 1, public: 'abc' });
+    });
+
 });

@@ -1,7 +1,17 @@
 (function(window) {
 
-    function Database() {
+    function Database(options) {
+
+        options = options || {};
+
         this._collectionMap = new Map();
+
+        this._modelClone = options.modelClone || function (model) {
+            // The default object clone method, suitable for JSON data
+            // Does not handle complex objects like Date and RegExp
+            return JSON.parse(JSON.stringify(model));
+        };
+
     }
 
     Database.prototype.createCollection = function (name, relationships) {
@@ -67,7 +77,7 @@
             }
 
             // We don't want our changes here to affect the originals, so we need to clone them
-            var clonedModel = objectClone(model);
+            var clonedModel = self.database._modelClone(model);
 
             // Collection relations first
             Object.keys(self.relationships).forEach(function (key) {
@@ -214,7 +224,7 @@
 
         var self = this;
 
-        var clonedModel = objectClone(model);
+        var clonedModel = self.database._modelClone(model);
 
         includes.forEach(function (include) {
 
@@ -265,12 +275,6 @@
     function isReference(model) {
         var keys = Object.keys(model);
         return keys.length === 1 && model.id !== undefined && model.id !== null;
-    }
-
-    function objectClone(model) {
-        // The default object clone method, suitable for JSON data
-        // Does not handle complex objects like Date and RegExp
-        return JSON.parse(JSON.stringify(model));
     }
 
     var Deebee = {

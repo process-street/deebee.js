@@ -106,4 +106,9 @@ describe('Collection Filters', function () {
         expect(models).toEqual([post1, post2]);
     });
 
+    it('should filter all models with blog id 1 using a predicate object', function () {
+        var models = posts.filter({ 'blog.id': 1 });
+        expect(models).toEqual([post1, post2]);
+    });
+
 });
