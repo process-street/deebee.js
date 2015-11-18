@@ -14,6 +14,14 @@
 
     }
 
+    /**
+     * Creates a new collection.
+     *
+     * @param name The name of the collection (must be unique within the database)
+     * @param relationships A map of field names to other collections
+     * @returns {Collection} A new collection
+     * @throws {Error} if a collection with `name` already exists
+     */
     Database.prototype.createCollection = function (name, relationships) {
 
         if (this._collectionMap.has(name)) {
