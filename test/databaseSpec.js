@@ -32,6 +32,13 @@ describe('Database', function () {
         expect(database.getCollection('gadgets')).toBe(collection);
     });
 
+    it('should throw an Error when attempting to retrieve a collection that does not exist', function () {
+        var database = new Deebee.Database();
+        expect(function () {
+            database.getCollection('gadgets');
+        }).toThrowError(Error);
+    });
+
     it('should delete all the collections', function () {
         var database = new Deebee.Database();
         database.createCollection('gadgets');

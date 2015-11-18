@@ -82,7 +82,7 @@ describe('Collection', function () {
         });
     });
 
-    it('should get a model with includes', function () {
+    it('should get a model with joined includes', function () {
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
             nation: nationCollection.name
@@ -99,7 +99,7 @@ describe('Collection', function () {
         expect(benderCollection.get(42, ['nation'])).toEqual(avatar);
     });
 
-    it('should get a model with 2 levels of includes', function () {
+    it('should get a model with 2 levels of joined includes', function () {
         var elementCollection = database.createCollection('elements');
         var nationCollection = database.createCollection('nations', {
             element: elementCollection.name
@@ -123,7 +123,7 @@ describe('Collection', function () {
         expect(benderCollection.get(42, ['nation.element'])).toEqual(avatar);
     });
 
-    it('should get a model with 2 includes', function () {
+    it('should get a model with 2 joined includes', function () {
         var elementCollection = database.createCollection('elements');
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
@@ -178,6 +178,38 @@ describe('Collection', function () {
         expect(nationCollection.get(1)).toEqual({ id: 1, name: 'Water Tribe' });
         expect(nationCollection.get(2)).toEqual({ id: 2, name: 'Fire Nation' });
 
+    });
+
+    it('should throw an Error if an "includes" relationship is not defined', function () {
+        var benderCollection = database.createCollection('benders');
+        var avatar = {
+            id: 42,
+            name: 'Korra',
+            nation: {
+                id: 1,
+                name: 'Water Tribe'
+            }
+        };
+        benderCollection.put(avatar);
+        expect(function () {
+            benderCollection.get(42, ['nation']);
+        }).toThrowError(Error);
+    });
+
+    it('should throw an Error if an "includes" relationship is not found', function () {
+        var nationCollection = database.createCollection('nations');
+        var benderCollection = database.createCollection('benders', {
+            nation: nationCollection.name
+        });
+        var avatar = {
+            id: 42,
+            name: 'Korra',
+            nation: { id: 1 }
+        };
+        benderCollection.put(avatar);
+        expect(function () {
+            benderCollection.get(42, ['nation']);
+        }).toThrowError(Error);
     });
 
 });

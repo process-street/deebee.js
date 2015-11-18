@@ -35,6 +35,9 @@
     };
 
     Database.prototype.getCollection = function (name) {
+        if (!this._collectionMap.has(name)) {
+           throw new Error('collection does not exist: ' + name);
+        }
         return this._collectionMap.get(name);
     };
 
@@ -233,6 +236,11 @@
 
             var collectionName = self.relationships[key];
             var collection = self.database.getCollection(collectionName);
+
+            if (!collection) {
+                throw new Error('could not find collection: ' + collectionName);
+            }
+
             var relation = collection.get(clonedModel[key].id);
 
             if (!relation) {
