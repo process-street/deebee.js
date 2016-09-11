@@ -55,8 +55,23 @@
 
     function Collection(database, name, relationships) {
 
-        this._modelMap = new Map();
-        this._eventListenerMap = new Map();
+        var self = this;
+
+        self._modelMap = new Map();
+        self._indexMap = new Map();
+        self._eventListenerMap = new Map();
+
+        var rels = {};
+        Object.keys(relationships || {}).forEach(function (key) {
+            var collName = relationships[key];
+            if (collName[0] === '*') {
+                var cleanedCollName = collName.substring(1);
+                self._indexMap.set(key, new Map());
+                rels[key] = cleanedCollName;
+            } else {
+                rels[key] = collName;
+            }
+        });
 
         Object.defineProperties(this, {
             database: {
@@ -69,7 +84,7 @@
             },
             relationships: {
                 enumerable: true,
-                value: relationships || {}
+                value: rels
             }
         });
 
@@ -108,6 +123,14 @@
                 // As you store them, strip them down to id references
                 clonedModel[key] = { id: relation.id };
 
+                // Update index, if it exists
+                var index = self._indexMap.get(key);
+                if (index) {
+                    var indexModelMap = index.get(relation.id) || new Map();
+                    indexModelMap.set(clonedModel.id, clonedModel);
+                    index.set(relation.id, indexModelMap);
+                }
+
             });
 
             //console.log('put a model into %s: %s', self.name, JSON.stringify(model));
@@ -131,6 +154,39 @@
 
     Collection.prototype.getAll = function (includes) {
         return this.filter(undefined, includes);
+    };
+
+    Collection.prototype.getAllBy = function (key, id, includes) {
+
+        var self = this;
+
+        includes = includes || [];
+
+        var index = self._indexMap.get(key);
+
+        var models;
+        if (index) {
+
+            // If there's an index, let's use that sucker
+            var indexModelMap = index.get(id) || new Map();
+            models = [];
+            indexModelMap.forEach(function (model) {
+                models.push(self._join(model, includes));
+            });
+
+        } else {
+
+            console.log('falling back to filter');
+
+            // If there's no index, fall back to sequential scan
+            models = self.filter(function (model) {
+                return model[key].id === id;
+            }, includes);
+
+        }
+
+        return models;
+
     };
 
     Collection.prototype.filter = function (f, includes) {

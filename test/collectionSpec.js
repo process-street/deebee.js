@@ -1,5 +1,5 @@
 describe('Collection', function () {
-    "use strict";
+    'use strict';
 
     var database;
 

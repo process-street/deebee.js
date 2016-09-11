@@ -1,5 +1,5 @@
 describe('Database', function () {
-    "use strict";
+    'use strict';
 
     it('should create new database with no collections', function () {
         var database = new Deebee.Database();

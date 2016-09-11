@@ -1,5 +1,5 @@
-describe('Collection Filters', function () {
-    "use strict";
+describe('Collection: filter', function () {
+    'use strict';
 
     var database;
     var users, blogs, posts;

@@ -1,8 +1,8 @@
-describe('Collection: Events', function () {
+describe('Collection: getAllBy', function () {
     'use strict';
 
     var database;
-    var users, blogs, posts;
+    var usersColl, blogsColl, postsColl;
 
     var blog1 = {
         id: 1,
@@ -46,39 +46,23 @@ describe('Collection: Events', function () {
 
         database = new Deebee.Database();
 
-        users = database.createCollection('users');
-        blogs = database.createCollection('blogs', {
-            owner: users.name
+        usersColl = database.createCollection('users');
+        blogsColl = database.createCollection('blogs', {
+            owner: usersColl.name
         });
-        posts = database.createCollection('posts', {
-            author: users.name,
-            blog: blogs.name
+        postsColl = database.createCollection('posts', {
+            author: '*' + usersColl.name,
+            blog: blogsColl.name
         });
 
-        blogs.put([blog1, blog2, blog3]);
-        posts.put([post1, post2, post3]);
+        blogsColl.put([blog1, blog2, blog3]);
+        postsColl.put([post1, post2, post3]);
 
     });
 
-    it('should trigger a delete event', function () {
-        var triggered = false;
-        posts.on('delete', function () {
-            triggered = true;
-        });
-        posts.delete(post1.id);
-        expect(triggered).toBe(true);
-    });
-
-    it('should use events to delete all posts when a blog is deleted', function () {
-
-        blogs.on('delete', function (blog) {
-            posts.deleteWhere({ 'blog.id': blog.id });
-        });
-
-        blogs.delete(blog1.id);
-
-        expect(posts.getAll()).toEqual([post3]);
-
+    it('should filter all posts that have the given author', function () {
+        var posts = postsColl.getAllBy('author', 1);
+        expect(posts).toEqual([post1, post2]);
     });
 
 });

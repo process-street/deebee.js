@@ -13,7 +13,7 @@ trees.put({ id: 1 });
 
 var MAX_APPLES = 100000;
 
-var apples = database.createCollection('apples', { tree: 'trees' });
+var apples = database.createCollection('apples', { tree: '*trees' });
 
 for (var i = 0; i < MAX_APPLES; i++) {
     apples.put({ id: i, tree: { id: i % 2 } });
@@ -45,6 +45,10 @@ apples.filter(function (apple) {
     return apple.tree.id === 1;
 });
 console.timeEnd('filter');
+
+console.time('getAllBy');
+apples.getAllBy('tree', 1);
+console.timeEnd('getAllBy');
 
 
 
