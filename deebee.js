@@ -165,12 +165,34 @@
         }
     };
 
-    Collection.prototype.some = function (f, includes) {
-        return this.count(f, includes) > 0;
+    Collection.prototype.find = function (f, includes) {
+
+        var self = this;
+
+        if (f) {
+            f = isFunction(f) ? f : generatePredicate(f);
+        } else {
+            f = function () { return true; };
+        }
+
+        includes = includes || [];
+
+        var result;
+        for (var it = self._modelMap.values(), o = it.next(); !o.done; o = it.next()) {
+            var model = o.value;
+            var joinedModel = self._join(model, includes);
+            if (f(joinedModel)) {
+                result = joinedModel;
+                break;
+            }
+        }
+
+        return result;
+
     };
 
-    Collection.prototype.find = function (f, includes) {
-        return this.filter(f, includes)[0];
+    Collection.prototype.some = function (f, includes) {
+        return !!this.find(f, includes);
     };
 
     Collection.prototype.delete = function (id) {
