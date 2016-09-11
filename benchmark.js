@@ -50,5 +50,13 @@ console.time('getAllBy');
 apples.getAllBy('tree', 1);
 console.timeEnd('getAllBy');
 
+console.time('filter with include');
+apples.filter(function (apple) {
+    return apple.tree.id === 1;
+}, ['tree']);
+console.timeEnd('filter with include');
 
+console.time('getAllBy with include');
+apples.getAllBy('tree', 1, ['tree']);
+console.timeEnd('getAllBy with include');
 
