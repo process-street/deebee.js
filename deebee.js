@@ -83,38 +83,46 @@
 
         models.forEach(function (model) {
 
-            if (model.id === undefined || model.id === null) {
-                throw new Error('model requires an id: ' + JSON.stringify(model));
-            }
-
             // We don't want our changes here to affect the originals, so we need to clone them
             var clonedModel = self.database._modelClone(model);
 
-            // Collection relations first
-            Object.keys(self.relationships).forEach(function (key) {
-
-                var collectionName = self.relationships[key];
-
-                var relation = clonedModel[key];
-                if (!relation) {
-                    throw new Error('non-existent relation "' + key + '" on ' + JSON.stringify(clonedModel));
-                }
-
-                // Don't store references
-                if (!isReference(relation)) {
-                    self.database.getCollection(collectionName).put(relation);
-                }
-
-                // As you store them, strip them down to id references
-                clonedModel[key] = { id: relation.id };
-
-            });
-
-            //console.log('put a model into %s: %s', self.name, JSON.stringify(model));
-            self.trigger('put', clonedModel);
-            self._modelMap.set(clonedModel.id, clonedModel);
+            self._putOne(clonedModel);
 
         });
+
+    };
+
+    Collection.prototype._putOne = function (model) {
+
+        var self = this;
+
+        if (model.id === undefined || model.id === null) {
+            throw new Error('model requires an id: ' + JSON.stringify(model));
+        }
+
+        // Collection relations first
+        Object.keys(self.relationships).forEach(function (key) {
+
+            var collectionName = self.relationships[key];
+
+            var relation = model[key];
+            if (!relation) {
+                throw new Error('non-existent relation "' + key + '" on ' + JSON.stringify(model));
+            }
+
+            // Don't store references
+            if (!isReference(relation)) {
+                self.database.getCollection(collectionName)._putOne(relation);
+            }
+
+            // As you store them, strip them down to id references
+            model[key] = { id: relation.id };
+
+        });
+
+        //console.log('put a model into %s: %s', self.name, JSON.stringify(model));
+        self.trigger('put', model);
+        self._modelMap.set(model.id, model);
 
     };
 
@@ -125,7 +133,8 @@
         includes = includes || [];
 
         var model = self._modelMap.get(id);
-        return model && self._join(model, includes);
+        var joinedModel = model && self._join(model, includes);
+        return joinedModel && self.database._modelClone(joinedModel);
 
     };
 
@@ -137,19 +146,15 @@
 
         var self = this;
 
-        if (f) {
-            f = isFunction(f) ? f : generatePredicate(f);
-        } else {
-            f = function () { return true; };
-        }
+        var pred = f ? generatePredicate(f) : alwaysTrue;
 
         includes = includes || [];
 
         var results = [];
         self._modelMap.forEach(function (model) {
             var joinedModel = self._join(model, includes);
-            if (f(joinedModel)) {
-                results.push(joinedModel);
+            if (pred(joinedModel)) {
+                results.push(self.database._modelClone(joinedModel));
             }
         });
 
@@ -158,22 +163,38 @@
     };
 
     Collection.prototype.count = function (f, includes) {
+
+        var self = this;
+
         if (f) {
-            return this.filter(f, includes).length;
+
+            var pred = f ? generatePredicate(f) : alwaysTrue;
+
+            includes = includes || [];
+
+            var count = 0;
+            self._modelMap.forEach(function (model) {
+                var joinedModel = self._join(model, includes);
+                if (pred(joinedModel)) {
+                    count++;
+                }
+            });
+
+            return count;
+
         } else {
-            return this._modelMap.size;
+
+            return self._modelMap.size;
+
         }
+
     };
 
     Collection.prototype.find = function (f, includes) {
 
         var self = this;
 
-        if (f) {
-            f = isFunction(f) ? f : generatePredicate(f);
-        } else {
-            f = function () { return true; };
-        }
+        var pred = f ? generatePredicate(f) : alwaysTrue;
 
         includes = includes || [];
 
@@ -181,8 +202,8 @@
         for (var it = self._modelMap.values(), o = it.next(); !o.done; o = it.next()) {
             var model = o.value;
             var joinedModel = self._join(model, includes);
-            if (f(joinedModel)) {
-                result = joinedModel;
+            if (pred(joinedModel)) {
+                result = self.database._modelClone(joinedModel);
                 break;
             }
         }
@@ -257,7 +278,10 @@
 
         var self = this;
 
-        var clonedModel = self.database._modelClone(model);
+        // Deference all relationships that might have been set in a previous join
+        Object.keys(self.relationships).forEach(function (key) {
+            model[key] = { id: model[key].id };
+        });
 
         includes.forEach(function (include) {
 
@@ -271,33 +295,41 @@
                 throw new Error('could not find collection: ' + collectionName);
             }
 
-            var relation = collection.get(clonedModel[key].id);
+            var relation = collection._modelMap.get(model[key].id);
 
             if (!relation) {
                 throw new Error('could not join key: ' + key);
             }
 
-            clonedModel[key] = keys.length > 1 ? collection._join(relation, keys.slice(1)) : relation;
+            model[key] = keys.length > 1 ? collection._join(relation, keys.slice(1)) : relation;
 
         });
 
-        return clonedModel;
+        return model;
 
     };
 
     // Helpers
 
     function generatePredicate(object) {
-        var keys = Object.keys(object);
-        return function (model) {
-            var result = true;
-            var len = keys.length;
-            for (var i = 0; i < len; i++) {
-                result = result && elvis(model, keys[i]) === object[keys[i]];
-                if (!result) break;
-            }
-            return result;
-        };
+        if (isFunction(object)) {
+            return object;
+        } else {
+            var keys = Object.keys(object);
+            return function (model) {
+                var result = true;
+                var len = keys.length;
+                for (var i = 0; i < len; i++) {
+                    result = result && elvis(model, keys[i]) === object[keys[i]];
+                    if (!result) break;
+                }
+                return result;
+            };
+        }
+    }
+
+    function alwaysTrue() {
+        return true;
     }
 
     function elvis(object, path) {

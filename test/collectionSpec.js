@@ -212,4 +212,52 @@ describe('Collection', function () {
         }).toThrowError(Error);
     });
 
+    it('should not have un-asked for relations', function () {
+
+        var nationCollection = database.createCollection('nations');
+        var benderCollection = database.createCollection('benders', {
+            nation: nationCollection.name
+        });
+        var avatar = {
+            id: 42,
+            name: 'Korra',
+            nation: {
+                id: 1,
+                name: 'Water Tribe'
+            }
+        };
+        benderCollection.put(avatar);
+
+        var avatarWithNation = benderCollection.get(42, ['nation']);
+        expect(avatarWithNation.nation.name).toBe(avatar.nation.name);
+
+        var avatarWithoutNation = benderCollection.get(42);
+        expect(avatarWithoutNation.nation.name).toBeUndefined();
+
+    });
+
+    it('should return the proper count with no predicate', function () {
+
+        var nationCollection = database.createCollection('nations');
+        nationCollection.put({ id: 1, name: 'Water Tribe', floating: false });
+        nationCollection.put({ id: 2, name: 'Fire Nation', floating: false });
+        nationCollection.put({ id: 3, name: 'Earth Empire', floating: false });
+        nationCollection.put({ id: 4, name: 'Air Nation', floating: true });
+
+        expect(nationCollection.count()).toBe(4);
+
+    });
+
+    it('should return the proper count with no predicate', function () {
+
+        var nationCollection = database.createCollection('nations');
+        nationCollection.put({ id: 1, name: 'Water Tribe', floating: false });
+        nationCollection.put({ id: 2, name: 'Fire Nation', floating: false });
+        nationCollection.put({ id: 3, name: 'Earth Empire', floating: false });
+        nationCollection.put({ id: 4, name: 'Air Nation', floating: true });
+
+        expect(nationCollection.count({ floating: false })).toBe(3);
+
+    });
+
 });

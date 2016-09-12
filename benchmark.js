@@ -9,20 +9,26 @@ var trees = database.createCollection('trees');
 trees.put({ id: 0 });
 trees.put({ id: 1 });
 
+// Setup types
+
+var types = database.createCollection('types');
+types.put({ id: 1 });
+
 // Setup apples
 
 var MAX_APPLES = 100000;
 
-var apples = database.createCollection('apples', { tree: 'trees' });
+var apples = database.createCollection('apples', { tree: 'trees', type: 'types' });
 
+console.time('put');
 for (var i = 0; i < MAX_APPLES; i++) {
-    apples.put({ id: i, tree: { id: i % 2 } });
+    apples.put({ id: i, tree: { id: i % 2 }, type: { id: 1 } });
 }
+console.timeEnd('put');
 
 // Benchmarks
 
 var randomAppleId = parseInt(MAX_APPLES * Math.random());
-console.log('random apple id = %d', randomAppleId);
 
 console.time('get');
 apples.get(randomAppleId);
@@ -46,5 +52,14 @@ apples.filter(function (apple) {
 });
 console.timeEnd('filter');
 
+console.time('filter with include');
+apples.filter(function (apple) {
+    return apple.tree.id === 1;
+}, ['tree']);
+console.timeEnd('filter with include');
 
-
+console.time('filter with 2 includes');
+apples.filter(function (apple) {
+    return apple.tree.id === 1;
+}, ['tree', 'type']);
+console.timeEnd('filter with 2 includes');
