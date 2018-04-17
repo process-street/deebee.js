@@ -1,13 +1,8 @@
 describe('Collection', function () {
     "use strict";
 
-    var database;
-
-    beforeEach(function() {
-        database = new Deebee.Database();
-    });
-
     it('should not put a model in the collection if the id is undefined', function () {
+        var database = new Deebee.Database();
         var collection = database.createCollection('benders');
         var avatar = { name: 'Korra', nation: 'Water Tribe' };
         expect(function () {
@@ -16,6 +11,7 @@ describe('Collection', function () {
     });
 
     it('should not put a model in the collection if the id is null', function () {
+        var database = new Deebee.Database();
         var collection = database.createCollection('benders');
         var avatar = { id: null, name: 'Korra', nation: 'Water Tribe' };
         expect(function () {
@@ -24,6 +20,7 @@ describe('Collection', function () {
     });
 
     it('should put a model in the collection', function () {
+        var database = new Deebee.Database();
         var collection = database.createCollection('benders');
         var avatar = { id: 42, name: 'Korra', nation: 'Water Tribe' };
         collection.put(avatar);
@@ -31,6 +28,7 @@ describe('Collection', function () {
     });
 
     it('should retrieve a model from the collection with the same id', function () {
+        var database = new Deebee.Database();
         var collection = database.createCollection('benders');
         var avatar = { id: 42, name: 'Korra', nation: 'Water Tribe' };
         collection.put(avatar);
@@ -38,6 +36,7 @@ describe('Collection', function () {
     });
 
     it('should replace a model in the collection if the ids match', function () {
+        var database = new Deebee.Database();
         var collection = database.createCollection('benders');
         var avatar1 = { id: 42, name: 'Korra', nation: 'Water Tribe' };
         var avatar2 = { id: 42, name: 'Aang', nation: 'Air Nation' };
@@ -48,6 +47,7 @@ describe('Collection', function () {
     });
 
     it('should put multiple models in the collection if an array is passed', function () {
+        var database = new Deebee.Database();
         var collection = database.createCollection('benders');
         var avatar1 = { id: 42, name: 'Korra', nation: 'Water Tribe' };
         var avatar2 = { id: 43, name: 'Aang', nation: 'Air Nation' };
@@ -56,6 +56,7 @@ describe('Collection', function () {
     });
 
     it('should put model relations in their collections', function () {
+        var database = new Deebee.Database();
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
             nation: nationCollection.name
@@ -83,6 +84,7 @@ describe('Collection', function () {
     });
 
     it('should get a model with joined includes', function () {
+        var database = new Deebee.Database();
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
             nation: nationCollection.name
@@ -100,6 +102,7 @@ describe('Collection', function () {
     });
 
     it('should get a model with 2 levels of joined includes', function () {
+        var database = new Deebee.Database();
         var elementCollection = database.createCollection('elements');
         var nationCollection = database.createCollection('nations', {
             element: elementCollection.name
@@ -124,6 +127,7 @@ describe('Collection', function () {
     });
 
     it('should get a model with 2 joined includes', function () {
+        var database = new Deebee.Database();
         var elementCollection = database.createCollection('elements');
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
@@ -147,6 +151,8 @@ describe('Collection', function () {
     });
 
     it('should replace model relation and add it to the proper collection', function () {
+
+        var database = new Deebee.Database();
 
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
@@ -181,6 +187,7 @@ describe('Collection', function () {
     });
 
     it('should throw an Error if an "includes" relationship is not defined', function () {
+        var database = new Deebee.Database();
         var benderCollection = database.createCollection('benders');
         var avatar = {
             id: 42,
@@ -197,6 +204,7 @@ describe('Collection', function () {
     });
 
     it('should throw an Error if an "includes" relationship is not found', function () {
+        var database = new Deebee.Database();
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
             nation: nationCollection.name
@@ -212,7 +220,27 @@ describe('Collection', function () {
         }).toThrowError(Error);
     });
 
+    it('should not throw an Error if an "includes" relationship is not found and joinErrorMode is "console"',
+        function () {
+            var database = new Deebee.Database({ joinErrorMode: 'log' });
+            var nationCollection = database.createCollection('nations');
+            var benderCollection = database.createCollection('benders', {
+                nation: nationCollection.name
+            });
+            var avatar = {
+                id: 42,
+                name: 'Korra',
+                nation: { id: 1 }
+            };
+            benderCollection.put(avatar);
+            expect(function () {
+                benderCollection.get(42, ['nation']);
+            }).not.toThrowError(Error);
+        });
+
     it('should not have un-asked for relations', function () {
+
+        var database = new Deebee.Database();
 
         var nationCollection = database.createCollection('nations');
         var benderCollection = database.createCollection('benders', {
@@ -238,6 +266,8 @@ describe('Collection', function () {
 
     it('should return the proper count with no predicate', function () {
 
+        var database = new Deebee.Database();
+
         var nationCollection = database.createCollection('nations');
         nationCollection.put({ id: 1, name: 'Water Tribe', floating: false });
         nationCollection.put({ id: 2, name: 'Fire Nation', floating: false });
@@ -249,6 +279,8 @@ describe('Collection', function () {
     });
 
     it('should return the proper count with no predicate', function () {
+
+        var database = new Deebee.Database();
 
         var nationCollection = database.createCollection('nations');
         nationCollection.put({ id: 1, name: 'Water Tribe', floating: false });

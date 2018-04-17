@@ -1,10 +1,15 @@
-(function(window) {
+(function (window) {
 
     function Database(options) {
 
         options = options || {};
 
         this._collectionMap = new Map();
+
+        // Two options:
+        // - throw: throw an exception
+        // - log: log it to console
+        this._joinErrorMode = options.joinErrorMode || 'throw';
 
         this._modelClone = options.modelClone || function (model) {
             // The default object clone method, suitable for JSON data
@@ -44,7 +49,7 @@
 
     Database.prototype.getCollection = function (name) {
         if (!this._collectionMap.has(name)) {
-           throw new Error('collection does not exist: ' + name);
+            throw new Error('collection does not exist: ' + name);
         }
         return this._collectionMap.get(name);
     };
@@ -133,7 +138,12 @@
         includes = includes || [];
 
         var model = self._modelMap.get(id);
-        var joinedModel = model && self._join(model, includes);
+        var joinedModel;
+        try {
+            joinedModel = model && self._join(model, includes);
+        } catch (error) {
+            this._error(error);
+        }
         return joinedModel && self.database._modelClone(joinedModel);
 
     };
@@ -152,9 +162,13 @@
 
         var results = [];
         self._modelMap.forEach(function (model) {
-            var joinedModel = self._join(model, includes);
-            if (pred(joinedModel)) {
-                results.push(self.database._modelClone(joinedModel));
+            try {
+                var joinedModel = self._join(model, includes);
+                if (pred(joinedModel)) {
+                    results.push(self.database._modelClone(joinedModel));
+                }
+            } catch (error) {
+                this._error(error);
             }
         });
 
@@ -174,9 +188,13 @@
 
             var count = 0;
             self._modelMap.forEach(function (model) {
-                var joinedModel = self._join(model, includes);
-                if (pred(joinedModel)) {
-                    count++;
+                try {
+                    var joinedModel = self._join(model, includes);
+                    if (pred(joinedModel)) {
+                        count++;
+                    }
+                } catch (error) {
+                    this._error(error);
                 }
             });
 
@@ -201,9 +219,15 @@
         var result;
         for (var it = self._modelMap.values(), o = it.next(); !o.done; o = it.next()) {
             var model = o.value;
-            var joinedModel = self._join(model, includes);
-            if (pred(joinedModel)) {
-                result = self.database._modelClone(joinedModel);
+            try {
+                var joinedModel = self._join(model, includes);
+                if (pred(joinedModel)) {
+                    result = self.database._modelClone(joinedModel);
+                }
+            } catch (error) {
+                this._error(error);
+            }
+            if (result) {
                 break;
             }
         }
@@ -298,7 +322,8 @@
             var relation = collection._modelMap.get(model[key].id);
 
             if (!relation) {
-                throw new Error('could not join key: ' + key);
+                var id = model[key] && model[key].id;
+                throw new Error('could not join key "' + key + '" with id: ' + id);
             }
 
             model[key] = keys.length > 1 ? collection._join(relation, keys.slice(1)) : relation;
@@ -306,6 +331,18 @@
         });
 
         return model;
+
+    };
+
+    Collection.prototype._error = function (error) {
+
+        switch (this.database._joinErrorMode) {
+        case 'throw':
+            throw error;
+        case 'log':
+        default:
+            console.error(error.message);
+        }
 
     };
 
@@ -359,7 +396,7 @@
         window.Deebee = Deebee;
 
         if (typeof define === "function" && define.amd) {
-            define(function() {
+            define(function () {
                 return {
                     Deebee: Deebee
                 }

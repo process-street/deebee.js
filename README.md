@@ -10,6 +10,13 @@ In a browser:
 <script src="deebee.js"></script>
 ```
 
+## Tests
+
+```
+npm install
+./node_modules/karma/bin/karma start
+```
+
 ## Notes
 
 Deebee uses the [ES6 Map object](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map) to
@@ -43,13 +50,8 @@ var fullAvatar = avatars.get(42, ['element']);
 // = { id: 42, name: 'Korra', element: { id: 1, name: 'Water' } }
 ```
 
-Deebee has many more features that will be documented in the near future. In the meantime, take a look at the source.
+Deebee is in maintenance mode and won't have any new features.
 
-## Author
-
-| [![twitter/cdmckay](https://gravatar.com/avatar/b181c028e6b51d408450e12ab68bf25c?s=70)](https://twitter.com/cdmckay "Follow @cdmckay on Twitter") |
-|---|
-| [Cameron McKay](https://cdmckay.org/) |
 
 ## License
 
