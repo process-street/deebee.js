@@ -142,7 +142,7 @@
         try {
             joinedModel = model && self._join(model, includes);
         } catch (error) {
-            this._error(error);
+            self._error(error);
         }
         return joinedModel && self.database._modelClone(joinedModel);
 
@@ -168,7 +168,7 @@
                     results.push(self.database._modelClone(joinedModel));
                 }
             } catch (error) {
-                this._error(error);
+                self._error(error);
             }
         });
 
@@ -194,7 +194,7 @@
                         count++;
                     }
                 } catch (error) {
-                    this._error(error);
+                    self._error(error);
                 }
             });
 
@@ -225,7 +225,7 @@
                     result = self.database._modelClone(joinedModel);
                 }
             } catch (error) {
-                this._error(error);
+                self._error(error);
             }
             if (result) {
                 break;
